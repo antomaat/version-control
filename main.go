@@ -21,6 +21,10 @@ func main() {
         vcHashObject(args[1:])
         return
     }
+    if args[0] == "cat-file" {
+        vcCatFile(args[1:])
+        return
+    }
 }
 
 func vcInit(args []string) {
@@ -30,7 +34,10 @@ func vcInit(args []string) {
 
 func vcHashObject(args []string) {
     readFile, _ := os.ReadFile(args[0]) 
-    fmt.Println("read file done")
-    fmt.Println(string(readFile))
-    HashObject(string(readFile))
+    result := HashObject(string(readFile))
+    fmt.Println(result)
+}
+
+func vcCatFile(args []string) {
+    fmt.Println(GetObject(args[0]))
 }

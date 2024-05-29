@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/sha1"
 	"encoding/base64"
-	"fmt"
 	"os"
 )
 
@@ -18,10 +17,15 @@ func HashObject(data string) string {
     // I think the encoding should not be with URLEncoding
     // Will fix at later date if this does not make sense in the long run
     objId := base64.URLEncoding.EncodeToString(hash.Sum(nil))
-    fmt.Println("object created")
-    fmt.Println(string(objId))
     createFile(string(objId), data)
     return string(objId)
+}
+
+func GetObject(hashString string) string {
+    file, err := os.ReadFile("./.vc/objects/" + hashString)
+    check(err)
+    return string(file)
+    
 }
 
 func createFile(name string, data string) {
