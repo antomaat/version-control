@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"os"
+	"strings"
 )
 
 func InitNewRepository() {
@@ -11,20 +12,25 @@ func InitNewRepository() {
     os.Mkdir(".vc/objects", os.FileMode(0777))
 }
 
-func HashObject(data string) string {
+func HashObject(data string, metaType string) string {
     hash := sha1.New()
     hash.Write([]byte(data))
     // I think the encoding should not be with URLEncoding
     // Will fix at later date if this does not make sense in the long run
     objId := base64.URLEncoding.EncodeToString(hash.Sum(nil))
-    createFile(string(objId), data)
+    dataWithMeta := metaType + "\x00" + data
+    createFile(string(objId), dataWithMeta)
     return string(objId)
 }
 
-func GetObject(hashString string) string {
+func GetObject(hashString string, expectedType string) string {
     file, err := os.ReadFile("./.vc/objects/" + hashString)
     check(err)
-    return string(file)
+    metaFields, fileData := separateMetaFields(string(file))
+    if metaFields != expectedType {
+	panic("meta value not what expected")
+    }
+    return fileData 
     
 }
 
@@ -33,6 +39,11 @@ func createFile(name string, data string) {
     check(err)
     file.WriteString(data)
     file.Close()
+}
+
+func separateMetaFields(file string) (string, string) {
+    nullIndex := strings.Index(file, "\x00")
+    return file[:nullIndex], file[nullIndex:]
 }
 
 func check(e error) {

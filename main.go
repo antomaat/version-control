@@ -25,6 +25,10 @@ func main() {
         vcCatFile(args[1:])
         return
     }
+    if args[0] == "write-tree" {
+        vcWriteTree(args[1:])
+        return
+    }
 }
 
 func vcInit(args []string) {
@@ -34,10 +38,14 @@ func vcInit(args []string) {
 
 func vcHashObject(args []string) {
     readFile, _ := os.ReadFile(args[0]) 
-    result := HashObject(string(readFile))
+    result := HashObject(string(readFile), "blob")
     fmt.Println(result)
 }
 
 func vcCatFile(args []string) {
-    fmt.Println(GetObject(args[0]))
+    fmt.Println(GetObject(args[0], "blob"))
+}
+
+func vcWriteTree(args []string) {
+    WriteTree(".")
 }
