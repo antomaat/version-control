@@ -43,9 +43,9 @@ func vcHashObject(args []string) {
 }
 
 func vcCatFile(args []string) {
-    fmt.Println(GetObject(args[0], "blob"))
+    fmt.Println(GetObject(args[0], args[1]))
 }
 
 func vcWriteTree(args []string) {
-    WriteTree(".")
+    fmt.Println(WriteTree("."))
 }

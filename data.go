@@ -27,7 +27,7 @@ func GetObject(hashString string, expectedType string) string {
     file, err := os.ReadFile("./.vc/objects/" + hashString)
     check(err)
     metaFields, fileData := separateMetaFields(string(file))
-    if metaFields != expectedType {
+    if expectedType != "debug" && metaFields != expectedType {
 	panic("meta value not what expected")
     }
     return fileData 
