@@ -29,6 +29,10 @@ func main() {
         vcWriteTree(args[1:])
         return
     }
+    if args[0] == "read-tree" {
+        vcReadTree(args[1:])
+        return
+    }
 }
 
 func vcInit(args []string) {
@@ -48,4 +52,8 @@ func vcCatFile(args []string) {
 
 func vcWriteTree(args []string) {
     fmt.Println(WriteTree("."))
+}
+
+func vcReadTree(args []string) {
+    fmt.Println(ReadTree(args[0]))
 }
