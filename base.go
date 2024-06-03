@@ -34,9 +34,24 @@ func WriteTree(directory string) string {
 }
 
 func ReadTree(treeOid string) DirItem {
+    clearDir("./")
     treeDir := updateTree(treeOid, "./")
     writeTree(treeDir)
     return treeDir
+}
+
+func clearDir(dir string) {
+    items, _ := os.ReadDir(dir)
+    for i := 0; i < len(items); i++ {
+	if items[i].Name() == ".vc" {
+	    continue
+	}
+	if items[i].Type().IsDir() {
+	    os.RemoveAll(dir + "/" + items[i].Name())
+	} else {
+	    os.Remove(dir + "/" + items[i].Name())
+	}
+    }
 }
 
 func writeTree(dirItem DirItem) {
