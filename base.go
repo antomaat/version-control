@@ -44,7 +44,9 @@ func Commit(message string) string {
     commit := "tree " + WriteTree(".") + "\n"
     commit += "\n"
     commit += message + "\n"
-    return commit
+    oid := HashObject(commit, "commit")
+    SetHead(oid)
+    return oid
 }
 
 func clearDir(dir string) {

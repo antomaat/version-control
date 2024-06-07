@@ -34,6 +34,13 @@ func GetObject(hashString string, expectedType string) string {
     
 }
 
+func SetHead(oid string) {
+    file, err := os.Create("./.vc/HEAD")
+    check(err)
+    file.WriteString(oid)
+    file.Close()
+}
+
 func createFile(name string, data string) {
     file, err := os.Create("./.vc/objects/" + name)
     check(err)
