@@ -42,6 +42,7 @@ func ReadTree(treeOid string) DirItem {
 
 func Commit(message string) string {
     commit := "tree " + WriteTree(".") + "\n"
+    commit += "parent " + GetHead() + "\n"
     commit += "\n"
     commit += message + "\n"
     oid := HashObject(commit, "commit")

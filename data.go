@@ -41,6 +41,14 @@ func SetHead(oid string) {
     file.Close()
 }
 
+func GetHead() string {
+    file, err := os.ReadFile("./.vc/HEAD")
+    if err != nil {
+	return ""
+    }
+    return string(file) 
+}
+
 func createFile(name string, data string) {
     file, err := os.Create("./.vc/objects/" + name)
     check(err)
