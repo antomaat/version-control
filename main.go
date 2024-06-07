@@ -33,6 +33,10 @@ func main() {
         vcReadTree(args[1:])
         return
     }
+    if args[0] == "commit" {
+        vcCommit(args[1:])
+        return
+    }
 }
 
 func vcInit(args []string) {
@@ -56,4 +60,10 @@ func vcWriteTree(args []string) {
 
 func vcReadTree(args []string) {
     fmt.Println(ReadTree(args[0]))
+}
+
+func vcCommit(args []string) {
+    if args[0] == "-m" {
+        fmt.Println(Commit(args[1]))
+    }
 }

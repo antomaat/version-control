@@ -40,6 +40,13 @@ func ReadTree(treeOid string) DirItem {
     return treeDir
 }
 
+func Commit(message string) string {
+    commit := "tree " + WriteTree(".") + "\n"
+    commit += "\n"
+    commit += message + "\n"
+    return commit
+}
+
 func clearDir(dir string) {
     items, _ := os.ReadDir(dir)
     for i := 0; i < len(items); i++ {
