@@ -57,16 +57,32 @@ func GetCommit(oid string) CommitItem {
     for i := 0; i < len(splitLines); i++ {
 	if len(splitLines[i]) > 0 {
 	    key, value := separateCommitLine(splitLines[i])
-	    if key == "tree" {
+	    keyTrim := strings.TrimFunc(key, func(r rune) bool {
+		    return !unicode.IsGraphic(r)
+		})
+	    if keyTrim == "tree" {
 		commitItem.tree = value
+		continue
 	    }
 	    if key == "parent" {
 		commitItem.parent = value
+		continue
 	    }
 	}
     }
 
     return commitItem
+}
+
+func Checkout(oid string) {
+    commit := GetCommit(oid)
+    if commit.tree == "" {
+	fmt.Printf("unknown oid [%s]\n", oid)
+	return
+    }
+    ReadTree(commit.tree)
+    SetHead(oid)
+    fmt.Printf("new Head at [%s]\n", oid)
 }
 
 func separateCommitLine(line string) (string, string) {

@@ -40,6 +40,9 @@ func main() {
     if args[0] == "log" {
         vcLog(args[1:])
     }
+    if args[0] == "checkout" {
+        vcCheckout(args[1:])
+    }
 }
 
 func vcInit(args []string) {
@@ -83,4 +86,14 @@ func vcLog(args []string) {
         fmt.Println(commit.message)
         oid = commit.parent
     }
+}
+
+func vcCheckout(args []string) {
+    if len(args) == 0 {
+        fmt.Println("oid needed for checkout")
+        return
+    }
+    oid := args[0]
+    Checkout(oid)
+
 }
