@@ -73,6 +73,9 @@ func vcCommit(args []string) {
 
 func vcLog(args []string) {
     oid := GetHead()
+    if (len(args) == 1) {
+        oid = args[0]
+    }
 
     for oid != "" {
         commit := GetCommit(oid)
