@@ -50,6 +50,33 @@ func Commit(message string) string {
     return oid
 }
 
+func GetCommit(oid string) CommitItem {
+    commit := GetObject(oid, "commit")
+    commitItem := CommitItem{oid: oid, message: commit}
+    splitLines := strings.Split(commit, "\n")
+    for i := 0; i < len(splitLines); i++ {
+	if len(splitLines[i]) > 0 {
+	    key, value := separateCommitLine(splitLines[i])
+	    if key == "tree" {
+		commitItem.tree = value
+	    }
+	    if key == "parent" {
+		commitItem.parent = value
+	    }
+	}
+    }
+
+    return commitItem
+}
+
+func separateCommitLine(line string) (string, string) {
+    splitLine := strings.Split(line, " ")
+    if len(splitLine) < 1 {
+	return "", ""
+    }
+    return splitLine[0], splitLine[1]
+}
+
 func clearDir(dir string) {
     items, _ := os.ReadDir(dir)
     for i := 0; i < len(items); i++ {
@@ -136,4 +163,11 @@ type TreeItem struct {
     itemType string;
     oid string;
     name string;
+}
+
+type CommitItem struct {
+    oid string;
+    tree string;
+    parent string;
+    message string;
 }

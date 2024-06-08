@@ -37,6 +37,9 @@ func main() {
         vcCommit(args[1:])
         return
     }
+    if args[0] == "log" {
+        vcLog(args[1:])
+    }
 }
 
 func vcInit(args []string) {
@@ -65,5 +68,16 @@ func vcReadTree(args []string) {
 func vcCommit(args []string) {
     if args[0] == "-m" {
         fmt.Println(Commit(args[1]))
+    }
+}
+
+func vcLog(args []string) {
+    oid := GetHead()
+
+    for oid != "" {
+        commit := GetCommit(oid)
+        fmt.Printf("commit %s \n", oid)
+        fmt.Println(commit.message)
+        oid = commit.parent
     }
 }
