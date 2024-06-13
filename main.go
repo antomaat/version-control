@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -43,6 +44,9 @@ func main() {
     if args[0] == "checkout" {
         vcCheckout(args[1:])
     }
+    if args[0] == "tag" {
+        vcTag(args[1:])
+    }
 }
 
 func vcInit(args []string) {
@@ -75,7 +79,7 @@ func vcCommit(args []string) {
 }
 
 func vcLog(args []string) {
-    oid := GetHead()
+    oid := GetRef("HEAD")
     if (len(args) == 1) {
         oid = args[0]
     }
@@ -95,5 +99,31 @@ func vcCheckout(args []string) {
     }
     oid := args[0]
     Checkout(oid)
+
+}
+
+func vcTag(args []string) {
+    if len(args) == 0 {
+        fmt.Println("at least the name should be provided")
+        return
+    }
+    arguments := createArguments(args)
+    oid := arguments["-oid"]
+    name := arguments["-name"]
+    if oid == "" {
+        oid = GetRef("HEAD")
+    }
+    CreateTag(name, oid)
+    fmt.Printf("oid: %s, name: %s\n", oid, name)
+}
+
+func createArguments(args [] string) map[string]string {
+    arguments := make(map[string]string)
+    for i := 0; i < len(args); i++ {
+        if strings.HasPrefix(args[i], "-") {
+            arguments[args[i]] = args[i+1]
+        }
+    }
+    return arguments
 
 }

@@ -10,6 +10,7 @@ import (
 func InitNewRepository() {
     os.Mkdir(".vc", os.FileMode(0777))
     os.Mkdir(".vc/objects", os.FileMode(0777))
+    os.Mkdir(".vc/refs/tags", os.FileMode(0777))
 }
 
 func HashObject(data string, metaType string) string {
@@ -34,15 +35,23 @@ func GetObject(hashString string, expectedType string) string {
     
 }
 
-func SetHead(oid string) {
-    file, err := os.Create("./.vc/HEAD")
+func UpdateRef(refName string, oid string) {
+    file, err := os.Create("./.vc/" + refName)
     check(err)
     file.WriteString(oid)
     file.Close()
 }
 
-func GetHead() string {
-    file, err := os.ReadFile("./.vc/HEAD")
+func UpdateRefInLocation(location string, refName string, oid string) {
+    os.MkdirAll("./.vc/" + location, os.ModePerm)
+    file, err := os.Create("./.vc/" + location + refName)
+    check(err)
+    file.WriteString(oid)
+    file.Close()
+}
+
+func GetRef(name string) string {
+    file, err := os.ReadFile("./.vc/" + name)
     if err != nil {
 	return ""
     }

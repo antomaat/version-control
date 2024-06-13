@@ -42,11 +42,11 @@ func ReadTree(treeOid string) DirItem {
 
 func Commit(message string) string {
     commit := "tree " + WriteTree(".") + "\n"
-    commit += "parent " + GetHead() + "\n"
+    commit += "parent " + GetRef("HEAD") + "\n"
     commit += "\n"
     commit += message + "\n"
     oid := HashObject(commit, "commit")
-    SetHead(oid)
+    UpdateRef("HEAD", oid)
     return oid
 }
 
@@ -81,8 +81,12 @@ func Checkout(oid string) {
 	return
     }
     ReadTree(commit.tree)
-    SetHead(oid)
+    UpdateRef("HEAD", oid)
     fmt.Printf("new Head at [%s]\n", oid)
+}
+
+func CreateTag(refName string, oid string) {
+    UpdateRefInLocation("refs/tags/", refName, oid)
 }
 
 func separateCommitLine(line string) (string, string) {
