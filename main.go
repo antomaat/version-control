@@ -15,7 +15,7 @@ func main() {
     }
     
     if args[0] == "init" {
-        vcInit(args[1:])
+        vcInit()
         return
     }
     if args[0] == "hash-object" {
@@ -27,7 +27,7 @@ func main() {
         return
     }
     if args[0] == "write-tree" {
-        vcWriteTree(args[1:])
+        vcWriteTree()
         return
     }
     if args[0] == "read-tree" {
@@ -49,7 +49,7 @@ func main() {
     }
 }
 
-func vcInit(args []string) {
+func vcInit() {
     fmt.Println("Initialize empty vc repository")
     InitNewRepository()
 }
@@ -61,15 +61,25 @@ func vcHashObject(args []string) {
 }
 
 func vcCatFile(args []string) {
-    fmt.Println(GetObject(args[0], args[1]))
+    if len(args) == 0 {
+        fmt.Println("need input arguments oid/tag and expected file type")
+        return
+    }
+    oid := GetOid(args[0])
+    expectedFileType := args[1]
+    fmt.Println(GetObject(oid, expectedFileType))
 }
 
-func vcWriteTree(args []string) {
+func vcWriteTree() {
     fmt.Println(WriteTree("."))
 }
 
 func vcReadTree(args []string) {
-    fmt.Println(ReadTree(args[0]))
+    if len(args) == 0 {
+        fmt.Println("need input argument oid/tag")
+    }
+    oid := GetOid(args[0])
+    fmt.Println(ReadTree(oid))
 }
 
 func vcCommit(args []string) {
@@ -79,9 +89,11 @@ func vcCommit(args []string) {
 }
 
 func vcLog(args []string) {
-    oid := GetRef("HEAD")
+    oid := ""
     if (len(args) == 1) {
-        oid = args[0]
+        oid = GetOid(args[0])
+    } else {
+        oid = GetRef("HEAD")
     }
 
     for oid != "" {
@@ -97,7 +109,7 @@ func vcCheckout(args []string) {
         fmt.Println("oid needed for checkout")
         return
     }
-    oid := args[0]
+    oid := GetOid(args[0])
     Checkout(oid)
 
 }
@@ -112,6 +124,8 @@ func vcTag(args []string) {
     name := arguments["-name"]
     if oid == "" {
         oid = GetRef("HEAD")
+    } else {
+        oid = GetOid(oid)
     }
     CreateTag(name, oid)
     fmt.Printf("oid: %s, name: %s\n", oid, name)

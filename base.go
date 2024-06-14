@@ -89,6 +89,21 @@ func CreateTag(refName string, oid string) {
     UpdateRefInLocation("refs/tags/", refName, oid)
 }
 
+func GetOid(oid string) string {
+    dirList := []string{
+	"" + oid,
+	"refs/" + oid,
+	"refs/tags/" + oid,
+	"refs/heads/" + oid,
+    }
+    for i := 0; i < len(dirList); i++ {
+	if GetRef(dirList[i]) != "" {
+	    return GetRef(dirList[i])
+	}
+    }
+    return oid
+}
+
 func separateCommitLine(line string) (string, string) {
     splitLine := strings.Split(line, " ")
     if len(splitLine) < 1 {
