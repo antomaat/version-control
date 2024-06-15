@@ -47,6 +47,10 @@ func main() {
     if args[0] == "tag" {
         vcTag(args[1:])
     }
+
+    if args[0] == "k" {
+        vcVisualize()
+    }
 }
 
 func vcInit() {
@@ -55,19 +59,23 @@ func vcInit() {
 }
 
 func vcHashObject(args []string) {
+    if len(args) == 0 {
+        fmt.Println("file name is needed")
+    }
     readFile, _ := os.ReadFile(args[0]) 
     result := HashObject(string(readFile), "blob")
     fmt.Println(result)
 }
 
 func vcCatFile(args []string) {
-    if len(args) == 0 {
-        fmt.Println("need input arguments oid/tag and expected file type")
-        return
+    arguments := createArguments(args)
+    oidValue := arguments["-oid"]
+    expectedFileTypeValue := arguments["-type"]
+    oid := "@"
+    if oidValue != "" {
+        oid = GetOid(args[0])
     }
-    oid := GetOid(args[0])
-    expectedFileType := args[1]
-    fmt.Println(GetObject(oid, expectedFileType))
+    fmt.Println(GetObject(oid, expectedFileTypeValue))
 }
 
 func vcWriteTree() {
@@ -78,7 +86,10 @@ func vcReadTree(args []string) {
     if len(args) == 0 {
         fmt.Println("need input argument oid/tag")
     }
-    oid := GetOid(args[0])
+    oid := "@"
+    if len(args) > 0 {
+        oid = GetOid(args[0])
+    }
     fmt.Println(ReadTree(oid))
 }
 
@@ -89,12 +100,10 @@ func vcCommit(args []string) {
 }
 
 func vcLog(args []string) {
-    oid := ""
+    oid := "@"
     if (len(args) == 1) {
         oid = GetOid(args[0])
-    } else {
-        oid = GetRef("HEAD")
-    }
+    } 
 
     for oid != "" {
         commit := GetCommit(oid)
@@ -105,30 +114,33 @@ func vcLog(args []string) {
 }
 
 func vcCheckout(args []string) {
-    if len(args) == 0 {
-        fmt.Println("oid needed for checkout")
-        return
+    oid := "@"
+    if len(args) > 0 {
+        oid = GetOid(args[0])
     }
-    oid := GetOid(args[0])
     Checkout(oid)
 
 }
 
 func vcTag(args []string) {
+    oid := "@"
     if len(args) == 0 {
-        fmt.Println("at least the name should be provided")
-        return
     }
     arguments := createArguments(args)
-    oid := arguments["-oid"]
-    name := arguments["-name"]
-    if oid == "" {
-        oid = GetRef("HEAD")
-    } else {
-        oid = GetOid(oid)
+    if arguments["-oid"] != "" {
+        oid = arguments["-oid"]
     }
+    name := arguments["-name"]
+    oid = GetOid(oid)
     CreateTag(name, oid)
     fmt.Printf("oid: %s, name: %s\n", oid, name)
+}
+
+func vcVisualize() {
+    refs := IterateRefs()
+    for i := 0; i < len(refs); i++ {
+        fmt.Println(refs[i])
+    }
 }
 
 func createArguments(args [] string) map[string]string {
