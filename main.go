@@ -49,7 +49,8 @@ func main() {
     }
 
     if args[0] == "k" {
-        vcVisualize()
+        dot := vcVisualize()
+        fmt.Println(dot)
     }
 }
 
@@ -100,16 +101,17 @@ func vcCommit(args []string) {
 }
 
 func vcLog(args []string) {
-    oid := "@"
+    oid := GetOid("@")
     if (len(args) == 1) {
         oid = GetOid(args[0])
     } 
 
-    for oid != "" {
-        commit := GetCommit(oid)
-        fmt.Printf("commit %s \n", oid)
-        fmt.Println(commit.message)
-        oid = commit.parent
+    oids := IterateCommitsAndParentsList([]string{oid})
+    for i := 0; i < len(oids); i++ {
+        fmt.Println()
+        commit := GetCommit(oids[i])
+        fmt.Printf("commit %s \n", oids[i])
+        fmt.Println("   " + commit.message)
     }
 }
 
@@ -119,7 +121,6 @@ func vcCheckout(args []string) {
         oid = GetOid(args[0])
     }
     Checkout(oid)
-
 }
 
 func vcTag(args []string) {
@@ -136,11 +137,29 @@ func vcTag(args []string) {
     fmt.Printf("oid: %s, name: %s\n", oid, name)
 }
 
-func vcVisualize() {
+func vcVisualize() string {
+    dot := "digraph commits {\n"
     refs := IterateRefs()
+    oids := []string{}
     for i := 0; i < len(refs); i++ {
-        fmt.Println(refs[i])
+        dot += "\"" + refs[i].name + "\"" + "[shape=note]\n"
+        dot += "\"" + refs[i].name + "\"" + "-> \"" + refs[i].commit.oid + "\"\n"
+        fmt.Println(refs[i].name + "-> " + refs[i].commit.oid)
+        oids = append(oids, refs[i].commit.oid)
     }
+    iterOids := IterateCommitsAndParentsList(oids)
+    for i := 0; i < len(iterOids); i++ {
+        refAndComm := iterOids[i]
+        commit := GetCommit(refAndComm)
+        fmt.Println(commit.oid)
+        dot += commit.oid + " [shape=box style=filled label = \"" + commit.oid[:10] + "\"]\n"
+        if (commit.parent != "") {
+            dot += "\"" + commit.oid + "\"" + "-> " + "\"" + commit.parent + "\"" +  "\n"
+            fmt.Println(commit.parent)
+        }
+    }
+    dot += "}"
+    return dot
 }
 
 func createArguments(args [] string) map[string]string {

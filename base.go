@@ -7,6 +7,26 @@ import (
 	"unicode"
 )
 
+func IterateCommitsAndParents(oids []string) map[string]string {
+    oid := make(map[string]string)
+    for i := 0; i < len(oids); i++ {
+	commit := GetCommit(oids[i])
+	oid[oids[i]] = commit.parent
+    }
+    return oid
+}
+
+func IterateCommitsAndParentsList(oids []string) []string {
+    oidList := []string{}
+    oid := oids[0]
+    for oid != "" {
+	commit := GetCommit(oid)
+	oidList = append(oidList, commit.oid)
+	oid = commit.parent
+    }
+    return oidList 
+}
+
 func WriteTree(directory string) string {
     items, _ := os.ReadDir(directory)
     // ignore the vc related directories
@@ -52,7 +72,8 @@ func Commit(message string) string {
 
 func GetCommit(oid string) CommitItem {
     commit := GetObject(oid, "commit")
-    commitItem := CommitItem{oid: oid, message: commit}
+    // this will probably break real soon. This will only show the message and not the whole tree meta info
+    commitItem := CommitItem{oid: oid, message: strings.Split(commit, "\n")[3]}
     splitLines := strings.Split(commit, "\n")
     for i := 0; i < len(splitLines); i++ {
 	if len(splitLines[i]) > 0 {
@@ -211,4 +232,9 @@ type CommitItem struct {
     tree string;
     parent string;
     message string;
+}
+
+type RefItem struct {
+    name string;
+    commit CommitItem;
 }

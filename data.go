@@ -42,15 +42,15 @@ func UpdateRef(refName string, oid string) {
     file.Close()
 }
 
-func IterateRefs() []string {
+func IterateRefs() []RefItem {
     refs := []string{"HEAD"}
     items, _ := os.ReadDir("./.vc/refs/tags")
     for i := 0; i < len(items); i++ {
 	refs = append(refs, "refs/tags/" + items[i].Name())
     }
-    refResults := []string{}
+    refResults := []RefItem{}
     for i := 0; i < len(refs); i++ {
-	refResults = append(refResults, refs[i] + " -> " + GetRef(refs[i]))
+	refResults = append(refResults, RefItem{name: refs[i], commit: GetCommit(GetRef(refs[i]))} )
     }
     return refResults
 
@@ -58,7 +58,7 @@ func IterateRefs() []string {
 
 func UpdateRefInLocation(location string, refName string, oid string) {
     os.MkdirAll("./.vc/" + location, os.ModePerm)
-    file, err := os.Create("./.vc/" + location + refName)
+    file, err := os.Create("./.vc/"+ location + refName)
     check(err)
     file.WriteString(oid)
     file.Close()
@@ -89,3 +89,4 @@ func check(e error) {
         panic(e)
     }
 }
+
