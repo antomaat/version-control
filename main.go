@@ -18,6 +18,10 @@ func main() {
         vcInit()
         return
     }
+    if args[0] == "status" {
+        vcStatus(args[1:])
+        return
+    }
     if args[0] == "hash-object" {
         vcHashObject(args[1:])
         return
@@ -48,6 +52,10 @@ func main() {
         vcTag(args[1:])
     }
 
+    if args[0] == "branch" {
+        vcBranch(args[1:])
+    }
+
     if args[0] == "k" {
         dot := vcVisualize()
         fmt.Println(dot)
@@ -55,8 +63,18 @@ func main() {
 }
 
 func vcInit() {
-    fmt.Println("Initialize empty vc repository")
-    InitNewRepository()
+    fmt.Println("Initialize vc repository")
+    InitSetup()
+}
+
+func vcStatus(args []string) {
+    head := GetOid("@")
+    branch := GetBranchName()
+    if branch != "" {
+        fmt.Printf("On branch %s\n", branch)
+    } else {
+        fmt.Printf("HEAD detached at %s\n", head[:10])
+    }
 }
 
 func vcHashObject(args []string) {
@@ -101,10 +119,13 @@ func vcCommit(args []string) {
 }
 
 func vcLog(args []string) {
+    fmt.Println("start log")
     oid := GetOid("@")
     if (len(args) == 1) {
         oid = GetOid(args[0])
-    } 
+    }
+
+    fmt.Printf("log start from oid %s\n", oid)
 
     oids := IterateCommitsAndParentsList([]string{oid})
     for i := 0; i < len(oids); i++ {
@@ -116,11 +137,11 @@ func vcLog(args []string) {
 }
 
 func vcCheckout(args []string) {
-    oid := "@"
-    if len(args) > 0 {
-        oid = GetOid(args[0])
+    if len(args) == 0 {
+        fmt.Println("commit name needed")
+        return
     }
-    Checkout(oid)
+    Checkout(args[0])
 }
 
 func vcTag(args []string) {
@@ -137,9 +158,30 @@ func vcTag(args []string) {
     fmt.Printf("oid: %s, name: %s\n", oid, name)
 }
 
+func vcBranch(args []string) {
+    arguments := createArguments(args)
+    name := ""
+    oid := "@"
+    if arguments["-n"] != "" {
+        name = arguments["-n"]
+    }
+    if arguments["-oid"] != "" {
+        oid = arguments["-oid"]
+    }
+    if name != "" {
+        oid = GetOid(oid)
+        CreateBranch(name, oid)
+        fmt.Printf("Branch %s created at %s \n", name, oid)
+    } else {
+        fmt.Println("-n <name> missing")
+    }
+
+
+}
+
 func vcVisualize() string {
     dot := "digraph commits {\n"
-    refs := IterateRefs()
+    refs := IterateRefs(false)
     oids := []string{}
     for i := 0; i < len(refs); i++ {
         dot += "\"" + refs[i].name + "\"" + "[shape=note]\n"

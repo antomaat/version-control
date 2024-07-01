@@ -7,6 +7,23 @@ import (
 	"unicode"
 )
 
+func InitSetup() {
+    InitNewRepository()
+    UpdateRef("HEAD", RefValue{symbolic: true, value: "refs/heads/master"}, true)
+}
+
+func GetBranchName() string {
+    head := GetRef("HEAD", false)
+    if !head.symbolic {
+	return ""
+    }
+    headValue := head.value
+    if strings.HasPrefix(headValue, "refs/heads") {
+	return headValue
+    }
+    return ""
+}
+
 func IterateCommitsAndParents(oids []string) map[string]string {
     oid := make(map[string]string)
     for i := 0; i < len(oids); i++ {
@@ -62,11 +79,11 @@ func ReadTree(treeOid string) DirItem {
 
 func Commit(message string) string {
     commit := "tree " + WriteTree(".") + "\n"
-    commit += "parent " + GetRef("HEAD") + "\n"
+    commit += "parent " + GetRef("HEAD", true).value + "\n"
     commit += "\n"
     commit += message + "\n"
     oid := HashObject(commit, "commit")
-    UpdateRef("HEAD", oid)
+    UpdateRef("HEAD", RefValue{symbolic: false, value: oid}, true)
     return oid
 }
 
@@ -95,19 +112,38 @@ func GetCommit(oid string) CommitItem {
     return commitItem
 }
 
-func Checkout(oid string) {
+func Checkout(name string) {
+    oid := GetOid(name)
     commit := GetCommit(oid)
     if commit.tree == "" {
-	fmt.Printf("unknown oid [%s]\n", oid)
+	fmt.Printf("unknown name [%s]\n", name)
 	return
     }
     ReadTree(commit.tree)
-    UpdateRef("HEAD", oid)
-    fmt.Printf("new Head at [%s]\n", oid)
+    head := RefValue{}
+    if isBranch(name) {
+	fmt.Printf("checkout branch %s\n", name)
+	head.value = "refs/heads/" + name
+	head.symbolic = true
+    } else {
+	fmt.Printf("checkout tag %s\n", name)
+	head.value = oid
+	head.symbolic = false 
+    }
+    UpdateRef("HEAD", head , false)
+    fmt.Printf("new Head at [%s]\n", name)
 }
 
 func CreateTag(refName string, oid string) {
-    UpdateRefInLocation("refs/tags/", refName, oid)
+    UpdateRefInLocation("refs/tags/", refName, RefValue{symbolic: false, value: oid}, true)
+}
+
+func CreateBranch(branchName string, oid string) {
+    UpdateRefInLocation("refs/heads/", branchName, RefValue{symbolic: false, value: oid}, true)
+}
+
+func isBranch(branch string) bool {
+    return GetRef("refs/heads/" + branch, true).value != ""
 }
 
 func GetOid(oid string) string {
@@ -123,17 +159,19 @@ func GetOid(oid string) string {
     }
 
     for i := 0; i < len(dirList); i++ {
-	if GetRef(dirList[i]) != "" {
-	    return GetRef(dirList[i])
+	if GetRef(dirList[i], false).value != "" {
+	    return GetRef(dirList[i], true).value
 	}
     }
+
+    fmt.Println("oid not found")
 
     return oid
 }
 
 func separateCommitLine(line string) (string, string) {
     splitLine := strings.Split(line, " ")
-    if len(splitLine) < 1 {
+    if len(splitLine) <= 1 {
 	return "", ""
     }
     return splitLine[0], splitLine[1]

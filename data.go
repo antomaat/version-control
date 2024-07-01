@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha1"
 	"encoding/base64"
+	"fmt"
 	"os"
 	"strings"
 )
@@ -10,7 +11,9 @@ import (
 func InitNewRepository() {
     os.Mkdir(".vc", os.FileMode(0777))
     os.Mkdir(".vc/objects", os.FileMode(0777))
+    os.Mkdir(".vc/refs", os.FileMode(0777))
     os.Mkdir(".vc/refs/tags", os.FileMode(0777))
+    os.Mkdir(".vc/refs/heads", os.FileMode(0777))
 }
 
 func HashObject(data string, metaType string) string {
@@ -35,14 +38,36 @@ func GetObject(hashString string, expectedType string) string {
     
 }
 
-func UpdateRef(refName string, oid string) {
-    file, err := os.Create("./.vc/" + refName)
+func UpdateRef(refName string, refValue RefValue, isDeref bool) {
+    if refValue.value == "" {
+	fmt.Printf("value of the ref is null\n")
+    }
+    ref, _ := GetRefInternal(refName, isDeref)
+    fmt.Printf("ref internal %s\n", ref)
+    file, err := os.Create("./.vc/" + ref)
     check(err)
-    file.WriteString(oid)
+    value := refValue.value
+    if refValue.symbolic {
+	value = "ref: " + value
+    }
+    file.WriteString(value)
     file.Close()
 }
 
-func IterateRefs() []RefItem {
+func UpdateRefInLocation(location string, refName string, refValue RefValue, isDeref bool) {
+    ref, _ := GetRefInternal(refName, isDeref)
+    os.MkdirAll("./.vc/" + location, os.ModePerm)
+    file, err := os.Create("./.vc/"+ location + ref)
+    check(err)
+    value := refValue.value
+    if refValue.symbolic {
+	value = "ref: " + value
+    }
+    file.WriteString(value)
+    file.Close()
+}
+
+func IterateRefs(isDeref bool) []RefItem {
     refs := []string{"HEAD"}
     items, _ := os.ReadDir("./.vc/refs/tags")
     for i := 0; i < len(items); i++ {
@@ -50,26 +75,36 @@ func IterateRefs() []RefItem {
     }
     refResults := []RefItem{}
     for i := 0; i < len(refs); i++ {
-	refResults = append(refResults, RefItem{name: refs[i], commit: GetCommit(GetRef(refs[i]))} )
+	refResults = append(refResults, RefItem{name: refs[i], commit: GetCommit(GetRef(refs[i], isDeref).value)} )
     }
     return refResults
 
 }
 
-func UpdateRefInLocation(location string, refName string, oid string) {
-    os.MkdirAll("./.vc/" + location, os.ModePerm)
-    file, err := os.Create("./.vc/"+ location + refName)
-    check(err)
-    file.WriteString(oid)
-    file.Close()
+func GetRef(name string, isDeref bool) RefValue {
+    _, refValue := GetRefInternal(name, isDeref)
+    return refValue
 }
 
-func GetRef(name string) string {
+func GetRefInternal(name string, isDeref bool) (string, RefValue) {
+    //fmt.Printf("ref internal name %s\n", name)
     file, err := os.ReadFile("./.vc/" + name)
     if err != nil {
-	return ""
+	return name, RefValue{symbolic: false, value: ""}
     }
-    return string(file) 
+    value := string(file)
+    isSymbolic := value != "" && strings.HasPrefix(value, "ref:") 
+    if isSymbolic {
+	value = strings.Trim(strings.Split(value, ":")[1], " ")
+	if isDeref {
+	    //fmt.Println("call recursively")
+	    return GetRefInternal(value, true)
+	}
+    }
+    return name, RefValue{
+	symbolic: isSymbolic,
+	value: value,
+    } 
 }
 
 func createFile(name string, data string) {
@@ -90,3 +125,7 @@ func check(e error) {
     }
 }
 
+type RefValue struct {
+    symbolic bool;
+    value string;
+}
