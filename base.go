@@ -24,6 +24,15 @@ func GetBranchName() string {
     return ""
 }
 
+func IterBranchNames() []string {
+    refs := IterateRefs("refs/heads/", false)
+    result := []string{}
+    for i := 0; i < len(refs); i++ {
+	result = append(result, refs[i].name)
+    }
+    return result
+}
+
 func IterateCommitsAndParents(oids []string) map[string]string {
     oid := make(map[string]string)
     for i := 0; i < len(oids); i++ {

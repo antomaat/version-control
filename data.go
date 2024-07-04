@@ -67,15 +67,17 @@ func UpdateRefInLocation(location string, refName string, refValue RefValue, isD
     file.Close()
 }
 
-func IterateRefs(isDeref bool) []RefItem {
+func IterateRefs(startPoint string, isDeref bool) []RefItem {
     refs := []string{"HEAD"}
-    items, _ := os.ReadDir("./.vc/refs/tags")
+    items, _ := os.ReadDir("./.vc/" + startPoint)
     for i := 0; i < len(items); i++ {
-	refs = append(refs, "refs/tags/" + items[i].Name())
+	refs = append(refs, startPoint + items[i].Name())
     }
     refResults := []RefItem{}
     for i := 0; i < len(refs); i++ {
-	refResults = append(refResults, RefItem{name: refs[i], commit: GetCommit(GetRef(refs[i], isDeref).value)} )
+	if strings.HasPrefix(refs[i], startPoint) {
+	    refResults = append(refResults, RefItem{name: refs[i], commit: GetCommit(GetRef(refs[i], isDeref).value)} )
+	}
     }
     return refResults
 

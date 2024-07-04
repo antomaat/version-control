@@ -173,7 +173,15 @@ func vcBranch(args []string) {
         CreateBranch(name, oid)
         fmt.Printf("Branch %s created at %s \n", name, oid)
     } else {
-        fmt.Println("-n <name> missing")
+        current := GetBranchName()
+        branchNames := IterBranchNames()
+        for i := 0; i < len(branchNames); i++ {
+            prefix := ""
+            if branchNames[i] == current {
+                prefix = "* "
+            }
+            fmt.Printf("%s%s \n",prefix, branchNames[i])
+        }
     }
 
 
@@ -181,7 +189,7 @@ func vcBranch(args []string) {
 
 func vcVisualize() string {
     dot := "digraph commits {\n"
-    refs := IterateRefs(false)
+    refs := IterateRefs("refs/tags/", false)
     oids := []string{}
     for i := 0; i < len(refs); i++ {
         dot += "\"" + refs[i].name + "\"" + "[shape=note]\n"
